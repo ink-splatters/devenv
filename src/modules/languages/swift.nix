@@ -7,21 +7,26 @@ in
   options.languages.swift = {
     enable = lib.mkEnableOption "tools for Swift development";
 
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = pkgs.swift;
-      defaultText = lib.literalExpression "pkgs.swift";
-      description = ''
+    package = lib.mkPackageOption pkgs "swift" {
+      extraDescription = ''
         The Swift package to use.
       '';
+    };
+
+    swiftpm = {
+      enable = lib.mkEnableOption "Swift Package Manager support";
+
+      package =  lib.mkPackageOption pkgs.swiftPackages [ "swiftpm" "swiftpm2nix" ] {
+        internal = true;
+      };
     };
   };
 
   config = lib.mkIf cfg.enable {
-    packages = [
+    packages =  [
       cfg.package
       pkgs.clang
-    ];
+    ] ++ lib.mkIf cfg.swiftpm.enable cfg.swiftpm.package;
 
     env.CC = "${pkgs.clang}/bin/clang";
   };
